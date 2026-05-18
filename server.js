@@ -45,11 +45,12 @@ async function callWHMCS(action, params = {}) {
   return data;
 }
 
-// ─── MCP Server ─────────────────────────────────────────────────────────────
-const server = new McpServer({
-  name: "whmcs-cloudstore",
-  version: "1.0.0",
-});
+// ─── MCP Server Factory ──────────────────────────────────────────────────────
+function createMcpServer() {
+  const server = new McpServer({
+    name: "whmcs-cloudstore",
+    version: "1.0.0",
+  });
 
 // ── Tool 1 : Lister les clients ─────────────────────────────────────────────
 server.tool(
@@ -265,6 +266,9 @@ server.tool(
   }
 );
 
+  return server;
+}
+
 // ─── Express + SSE Transport ─────────────────────────────────────────────────
 const app = express();
 const transports = {};
@@ -273,6 +277,7 @@ app.get("/sse", async (req, res) => {
   const transport = new SSEServerTransport("/messages", res);
   transports[transport.sessionId] = transport;
   res.on("close", () => delete transports[transport.sessionId]);
+  const server = createMcpServer();
   await server.connect(transport);
 });
 
