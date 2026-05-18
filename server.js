@@ -304,6 +304,12 @@ app.get("/health", (_, res) => {
   res.json({ status: "ok", server: "whmcs-cloudstore-mcp", version: "1.0.0" });
 });
 
+app.get("/myip", async (_, res) => {
+  const r = await fetch("https://api.ipify.org?format=json");
+  const data = await r.json();
+  res.json(data);
+});
+
 app.listen(PORT, () => {
   console.log(`✅ WHMCS MCP Server démarré sur le port ${PORT}`);
   console.log(`🔗 WHMCS URL : ${WHMCS_URL}`);
