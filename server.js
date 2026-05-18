@@ -1,6 +1,7 @@
 import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 
 // ─── Config ────────────────────────────────────────────────────────────────
@@ -271,6 +272,7 @@ server.tool(
 
 // ─── Express + SSE Transport ─────────────────────────────────────────────────
 const app = express();
+app.use(express.json());
 const transports = {};
 
 app.get("/sse", async (req, res) => {
@@ -288,6 +290,14 @@ app.post("/messages", express.json(), async (req, res) => {
     return res.status(404).json({ error: "Session introuvable" });
   }
   await transport.handlePostMessage(req, res, req.body);
+});
+
+// ─── Streamable HTTP Transport (nouveau protocole MCP) ───────────────────────
+app.all("/mcp", async (req, res) => {
+  const server = createMcpServer();
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  await server.connect(transport);
+  await transport.handleRequest(req, res, req.body);
 });
 
 app.get("/health", (_, res) => {
